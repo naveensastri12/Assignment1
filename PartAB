@@ -1,0 +1,89 @@
+import collections
+import re
+import sys
+import unicodedata
+
+# This function has a linear time complexity.
+def read_tokens(filepath):
+    with open(filepath, 'r', encoding='utf-8') as f:
+        original_tokens = f.readlines()
+    cleantokens = []
+    for i in original_tokens:
+        i = i.strip("\n")
+        cleantoken = ""
+        tmp = ""
+        if i[-2:] == "'s":
+            tmp += i[:-2]
+        else:
+            tmp += i
+        for a in tmp:
+            if unicodedata.category(a)[0] in ['L', 'N']:  # Only keep letters and numbers
+                # Check that the character name does not contain "CYRILLIC", "CJK", or "GREEK"
+                if "CYRILLIC" not in unicodedata.name(a) and "CJK" not in unicodedata.name(a) and "GREEK" not in unicodedata.name(a):
+                    cleantoken += a
+        if cleantoken:
+            cleantokens.append(cleantoken.lower())
+    return cleantokens
+
+# This function has a linear time complexity.
+def compute_word_frequencies(cleantokens):
+    tokens = {}
+    for i in cleantokens:
+        if i not in tokens:
+            tokens[i] = 1
+        else:
+            tokens[i] += 1
+    return tokens
+
+# This function has a linear time complexity.
+def tokens_in_order(tokenobject):
+    print("Tokens and their occurrence: ")
+    sorted_tokens = sorted(tokenobject.items(), key=lambda kv: kv[1], reverse=True)
+    for key, value in sorted_tokens:
+        print(f"{key} {value}")
+
+# This function has a linear time complexity.
+def read_file(file_name):
+    regex = re.compile('[^a-zA-Z]+')  # modify the regex pattern to split on non-English characters
+    try:
+        with open(file_name) as f:
+            content = f.readlines()
+            content = [x.strip() for x in content]
+            words = []
+            for record in content:
+                records = record.split(" ")
+                for word in records:
+                    # Split word on non-English characters
+                    for temp in regex.split(word.strip()):
+                        # Check that the word does not contain any non-English letters
+                        if all("CYRILLIC" not in unicodedata.name(a) and "CJK" not in unicodedata.name(a) and "GREEK" not in unicodedata.name(a) for a in temp):
+                            # Split word on bad characters present between English characters
+                            for sub_word in re.findall(r'[a-zA-Z]+', temp):
+                                words.append(sub_word.lower())
+            return words
+    except:
+        print("Error in opening file")
+        return []
+        
+        
+# This function has a quadratic time complexity.
+def get_common_tokens(file_one, file_two):
+    first_file_tokens = read_file(file_one)
+    second_file_tokens = read_file(file_two)
+    count = 0
+    for word in first_file_tokens:
+        if word in second_file_tokens:
+            count += 1
+    print(count)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) == 3:
+        file_one = sys.argv[1]
+        file_two = sys.argv[2]
+        get_common_tokens(file_one, file_two)
+    else:
+        print("Usage: python script.py file_one file_two")
+        
+        
+        
